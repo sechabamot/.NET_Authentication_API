@@ -23,12 +23,14 @@ namespace AuthenticationApp
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment hostingEnvironment)
         {
-            Configuration = configuration;
+            _configuration = configuration;
+            _hostingEnvironment = hostingEnvironment;
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration _configuration;
+        public IHostingEnvironment _hostingEnvironment;
 
         public void ConfigureServices(IServiceCollection services)
         {
@@ -36,7 +38,7 @@ namespace AuthenticationApp
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             
             services.AddDbContext<ApplicationDbContext>(options =>
-             options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+             options.UseSqlServer(_configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
@@ -45,7 +47,7 @@ namespace AuthenticationApp
            .AddEntityFrameworkStores<ApplicationDbContext>()
            .AddDefaultTokenProviders();
 
-            byte[] applicationSecret = System.Text.Encoding.ASCII.GetBytes(Configuration["Application:Secret"]);
+            byte[] applicationSecret = System.Text.Encoding.ASCII.GetBytes(_configuration["Application:Secret"]);
             services.AddAuthentication(x =>
             {
                 x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -68,12 +70,11 @@ namespace AuthenticationApp
             {
                 c.OperationFilter<SecurityRequirementsOperationFilter>();
                 c.AddSecurityDefinition("bearer", SwaggerHelper.GetSwaggerTokenSecurityScheme());
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = Configuration["Application:Name"], Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = _configuration["Application:Name"], Version = "v1" });
             
             });
 
         }
-
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
@@ -82,7 +83,7 @@ namespace AuthenticationApp
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
                 {
-                    c.SwaggerEndpoint("v1/swagger.json", $"{Configuration["Application:Name"]} API V1");
+                    c.SwaggerEndpoint("v1/swagger.json", $"{_configuration["Application:Name"]} API V1");
                 });
             }
             else
@@ -95,7 +96,8 @@ namespace AuthenticationApp
             app.UseMvc();
 
             AddIdentityRoles(app).ConfigureAwait(true).GetAwaiter();
-
+            CreateInitialUsers(app).ConfigureAwait(true).GetAwaiter();
+            ConfigureAnalyticsAnalytics(app);
         }
 
         private async Task AddIdentityRoles(IApplicationBuilder app)
@@ -118,6 +120,34 @@ namespace AuthenticationApp
                 }
             }
         }
+        private async Task CreateInitialUsers(IApplicationBuilder app)
+        {
+            var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
+            using (IServiceScope scope = serviceScope.CreateScope())
+            {
+                var rolesManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = scope.ServiceProvider.GetService<UserManager<ApplicationUser>>();
+
+                List<ApplicationUser> users = new List<ApplicationUser>
+                {
+
+                };
+
+                foreach (ApplicationUser user in users)
+                {
+
+                }
+
+            }
+        }
+        private void ConfigureAnalyticsAnalytics(IApplicationBuilder app)
+        {
+            if (_hostingEnvironment.IsDevelopment())
+            {
+
+            }
+        }
+
 
     }
 }
