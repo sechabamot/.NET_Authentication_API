@@ -1,6 +1,8 @@
 ﻿using AuthenticationApp.Data;
 using AuthenticationApp.Helpers;
+using AuthenticationApp.Interfaces;
 using AuthenticationApp.Models;
+using AuthenticationApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -73,6 +75,9 @@ namespace AuthenticationApp
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = _configuration["Application:Name"], Version = "v1" });
             
             });
+
+
+            services.AddTransient<IUserService, UserService>();
 
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
