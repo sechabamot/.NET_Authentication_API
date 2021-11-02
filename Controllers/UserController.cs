@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -40,14 +39,14 @@ namespace AuthenticationApp.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Authenticate([Required] string email, [Required] string password)
+        public async Task<ActionResult> Authenticate(AuthenicateRequestModel model)
         {
-            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password))
+            if (ModelState.IsValid)
             {
                 try
                 {
                     string securityToken = await _userService
-                        .Authenticate(email, password);
+                        .Authenticate(model.Email, model.Password);
 
                     if (string.IsNullOrWhiteSpace(securityToken))
                     {
@@ -72,21 +71,20 @@ namespace AuthenticationApp.Controllers
 
         [HttpPost]
         [Route("Website/[controller]/[action]")]
-        public async Task<ActionResult> Create([Required] string email, [Required] string password)
+        public async Task<ActionResult> Register(CreateUserRequestModel model)
         {
-            if (!string.IsNullOrWhiteSpace(email) && !string.IsNullOrWhiteSpace(password))
+            if (ModelState.IsValid)
             {
                 try
                 {
-                    string result = await _userService.Create(email, password);
+                    string result = await _userService.Create(model.Email, model.Password);
                     if (string.IsNullOrEmpty(result)) return Ok();
 
                     return Conflict(result);
                 }
                 catch (Exception exception)
                 {
-                    string action = "Failed to create user using email and password";
-
+                    string action = "Create user using email and password";
                     _problemRecorder.RecordProblem(_controllerName, action, exception);
 
                     return StatusCode(500);
@@ -98,8 +96,8 @@ namespace AuthenticationApp.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("[controller]/[action]/Public")]
-        public ActionResult Read([Required] string userId)
+        [Route("[controller]/[action]")]
+        public ActionResult Return([Required] string userId)
         {
             if (!string.IsNullOrWhiteSpace(userId))
             {
@@ -108,7 +106,7 @@ namespace AuthenticationApp.Controllers
                     ApplicationUser user = _userService.Read(userId);
                     if (user == null)
                     {
-                        return NotFound("User does not exist.");
+                        return NotFound("User does not exist");
                     }
 
                     PublicUserInfo publicUser = new PublicUserInfo(user.Id, user.DisplayName,
@@ -132,7 +130,7 @@ namespace AuthenticationApp.Controllers
         [Authorize]
         [HttpGet]
         [Route("[controller]/[Action]/All")]
-        public ActionResult Read()
+        public ActionResult Return()
         {
             try
             {
@@ -155,7 +153,7 @@ namespace AuthenticationApp.Controllers
 
         [Authorize]
         [HttpPut]
-        [Route("[controller]/[action]")]
+        [Route("[controller]/[action]/User")]
         public async Task<ActionResult> Update([Required] string userId, [FromBody] UserInfoToUpdate userInfo)
         {
             if (!string.IsNullOrEmpty(userId) && ModelState.IsValid)
@@ -209,7 +207,6 @@ namespace AuthenticationApp.Controllers
             }
             return BadRequest();
         }
-
 
     }
 }
