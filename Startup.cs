@@ -1,6 +1,9 @@
 ﻿using AuthenticationApp.Data;
 using AuthenticationApp.Helpers;
+using AuthenticationApp.Interfaces;
 using AuthenticationApp.Models;
+using AuthenticationApp.Services;
+using CoTripRest.Services.Implimentations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -71,8 +74,12 @@ namespace AuthenticationApp
                 c.OperationFilter<SecurityRequirementsOperationFilter>();
                 c.AddSecurityDefinition("bearer", SwaggerHelper.GetSwaggerTokenSecurityScheme());
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = _configuration["Application:Name"], Version = "v1" });
-            
+                c.EnableAnnotations();
             });
+
+
+            services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IRecordProblems, RecordProblems>();
 
         }
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

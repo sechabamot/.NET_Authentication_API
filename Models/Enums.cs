@@ -11,4 +11,11 @@ namespace AuthenticationApp.Models
         Admin = 2,
         User = 3,
     }
+
+    public enum Gender
+    {
+        Male = 1,
+        Female = 2,
+    }
+
 }
