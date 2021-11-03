@@ -12,10 +12,10 @@ namespace AuthenticationApp.Interfaces
     public interface IUserService
     {
         Task<string> Create(string email, string password);
-        ApplicationUser Read(string userId);
+        ApplicationUser Read(string email);
         IQueryable<ApplicationUser> Read();
-        Task<string> Update(string userId, UserInfoToUpdate userInfo);
-        Task<string> Delete(string userId);
+        Task<string> Update(string email, UserInfoToUpdateRequestModel userInfo);
+        Task<string> Delete(string email);
         Task<string> Authenticate(string email, string password);
 
     }

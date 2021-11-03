@@ -13,7 +13,7 @@ namespace AuthenticationApp.Models
         public string Email { get; set; }
 
         [Required]
-        [MinLength(8), MaxLength(12)]
+        [MinLength(8), MaxLength(16)]
         public string Password { get; set; }
 
     }

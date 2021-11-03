@@ -3,6 +3,7 @@ using AuthenticationApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -10,8 +11,9 @@ using System.Threading.Tasks;
 
 namespace AuthenticationApp.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api")]
     [ApiController]
+    [SwaggerTag("Create, read, update and delete users")]
     public class UserController : ControllerBase
     {
         private string _controllerName = "User Controller";
@@ -27,19 +29,26 @@ namespace AuthenticationApp.Controllers
         [Authorize]
         [HttpGet]
         [Route("[controller]/[action]")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [SwaggerResponse(201, "Authentication Successful.")]
+        [SwaggerResponse(401, "Unauthorised.")]
+        [SwaggerOperation(
+            Description = "Checks if the user is authenticated on the platform."
+        )]
         public ActionResult Authenticated()
         {
             return Ok();
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("[controller]/[action]")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> Authenticate(AuthenicateRequestModel model)
+        [SwaggerResponse(201, "Authentication Successful.")]
+        [SwaggerResponse(400, "Bad request, check your input.")]
+        [SwaggerResponse(401, "Wrong emai or password.")]
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerOperation(
+            Description = "Authenticate the user using an email and password. Returns a JWT token used to authenticate the user."
+        )]
+        public async Task<ActionResult> Authenticate([FromBody] AuthenicateRequestModel model)
         {
             if (ModelState.IsValid)
             {
@@ -48,7 +57,7 @@ namespace AuthenticationApp.Controllers
                     string securityToken = await _userService
                         .Authenticate(model.Email, model.Password);
 
-                    if (string.IsNullOrWhiteSpace(securityToken))
+                    if (string.IsNullOrEmpty(securityToken))
                     {
                         return Unauthorized();
                     }
@@ -70,13 +79,22 @@ namespace AuthenticationApp.Controllers
         }
 
         [HttpPost]
-        [Route("Website/[controller]/[action]")]
-        public async Task<ActionResult> Register(CreateUserRequestModel model)
+        [Route("[controller]/[action]")]
+        [SwaggerResponse(201, "Registration Successful.")]
+        [SwaggerResponse(400, "Bad request, registration info.")]
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerResponse(409, "Cannot register user.")]
+        [SwaggerOperation(
+            Description = "Registers a new user without an assigned role onto the identity store."
+        )]
+        public async Task<ActionResult> Register([FromBody, 
+            SwaggerRequestBody("The user registration info", Required = true)] RegisterUserRequestModel model)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
+                    
                     string result = await _userService.Create(model.Email, model.Password);
                     if (string.IsNullOrEmpty(result)) return Ok();
 
@@ -96,14 +114,20 @@ namespace AuthenticationApp.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("[controller]/[action]")]
-        public ActionResult Return([Required] string userId)
+        [Route("[controller]")]
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerResponse(404, "Could not find user.")]
+        [SwaggerResponse(401, "Unauthorised.")]
+        [SwaggerOperation(
+            Description = "Return the public user info for the user with the provided email."
+        )]
+        public ActionResult Return([Required] string email)
         {
-            if (!string.IsNullOrWhiteSpace(userId))
+            if (!string.IsNullOrWhiteSpace(email))
             {
                 try
                 {
-                    ApplicationUser user = _userService.Read(userId);
+                    ApplicationUser user = _userService.Read(email);
                     if (user == null)
                     {
                         return NotFound("User does not exist");
@@ -117,7 +141,6 @@ namespace AuthenticationApp.Controllers
                 catch (Exception exception)
                 {
                     string action = "Reading individual user info";
-
                     _problemRecorder.RecordProblem(_controllerName, action, exception);
 
                     return StatusCode(500);
@@ -129,7 +152,13 @@ namespace AuthenticationApp.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("[controller]/[Action]/All")]
+        [Route("[controller]/All")]
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerResponse(204, "No users.")]
+        [SwaggerResponse(401, "Unauthorised.")]
+        [SwaggerOperation(
+            Description = "Return the internal user info for all the user on the data store."
+        )]
         public ActionResult Return()
         {
             try
@@ -154,13 +183,20 @@ namespace AuthenticationApp.Controllers
         [Authorize]
         [HttpPut]
         [Route("[controller]/[action]/User")]
-        public async Task<ActionResult> Update([Required] string userId, [FromBody] UserInfoToUpdate userInfo)
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerResponse(404, "Could not find user.")]
+        [SwaggerResponse(401, "Unauthorised.")]
+        [SwaggerResponse(409, "Cannot update user.")]
+        [SwaggerOperation(
+            Description = "Update user info for the user with the provided email."
+        )]
+        public async Task<ActionResult> Update([Required] string email, [FromBody] UserInfoToUpdateRequestModel userInfo)
         {
-            if (!string.IsNullOrEmpty(userId) && ModelState.IsValid)
+            if (!string.IsNullOrEmpty(email) && ModelState.IsValid)
             {
                 try
                 {
-                    string result = await _userService.Update(userId, userInfo);
+                    string result = await _userService.Update(email, userInfo);
                     if (string.IsNullOrEmpty(result))
                     {
                         return Ok();
@@ -183,13 +219,20 @@ namespace AuthenticationApp.Controllers
         [Authorize]
         [HttpDelete]
         [Route("[controller]/[action]")]
-        public async Task<ActionResult> Delete([Required] string userId)
+        [SwaggerResponse(500, "Internal servor error.")]
+        [SwaggerResponse(404, "Could not find user.")]
+        [SwaggerResponse(401, "Unauthorised.")]
+        [SwaggerResponse(409, "Cannot delete user.")]
+        [SwaggerOperation(
+            Description = "Delete user with the provided email."
+        )]
+        public async Task<ActionResult> Delete([Required] string email)
         {
-            if (!string.IsNullOrEmpty(userId))
+            if (!string.IsNullOrEmpty(email))
             {
                 try
                 {
-                    string result = await _userService.Delete(userId);
+                    string result = await _userService.Delete(email);
                     if (string.IsNullOrEmpty(result))
                     {
                         return Ok();

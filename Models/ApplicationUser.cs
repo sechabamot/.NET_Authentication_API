@@ -33,8 +33,10 @@ namespace AuthenticationApp.Models
 
         #region Methods
 
-        public static ApplicationUser UpdateUsersInformation(ApplicationUser user, UserInfoToUpdate info)
+        public static ApplicationUser UpdateUsersInformation(ApplicationUser user, UserInfoToUpdateRequestModel info)
         {
+            user.FirstName = info.FirstName ?? user.FirstName ?? "";
+            user.LastName = info.LastName ?? user.LastName ?? "";
             user.DisplayName = info.DisplayName;
             user.About = info.About ?? user.About;
 
@@ -93,7 +95,7 @@ namespace AuthenticationApp.Models
 
     }
 
-    public class UserInfoToUpdate
+    public class UserInfoToUpdateRequestModel
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }

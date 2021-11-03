@@ -47,17 +47,17 @@ namespace AuthenticationApp.Services
 
             return "Something went wrong and it's not your fault";
         }
-        public ApplicationUser Read(string userId)
+        public ApplicationUser Read(string email)
         {
-            return _userManager.Users.FirstOrDefault(u => u.Id.Equals(userId));
+            return _userManager.Users.FirstOrDefault(u => u.Email.Equals(email));
         }
         public IQueryable<ApplicationUser> Read()
         {
             return _userManager.Users;
         }
-        public async Task<string> Update(string userId, UserInfoToUpdate info)
+        public async Task<string> Update(string email, UserInfoToUpdateRequestModel info)
         {
-            var user =  await _userManager.FindByIdAsync(userId);
+            var user =  await _userManager.FindByEmailAsync(email);
             if (user != null)
             {
                 IdentityResult update = await _userManager.UpdateAsync(ApplicationUser.UpdateUsersInformation(user, info));
@@ -69,9 +69,9 @@ namespace AuthenticationApp.Services
             }
             return "Cannot update a user that does not exist";
         }
-        public async Task<string> Delete(string userId)
+        public async Task<string> Delete(string email)
         {
-            ApplicationUser user = await _userManager.FindByIdAsync(userId);
+            ApplicationUser user = await _userManager.FindByEmailAsync(email);
             if (user != null )
             {
                 IdentityResult delete = await _userManager.DeleteAsync(user);
